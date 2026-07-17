@@ -1,0 +1,18 @@
+project: savantenvs/cc500
+target: cc500
+
+# In-process libFuzzer harness (mayhem/fuzz_cc500.c) driving cc500's whole compile pipeline
+# — lexer, recursive-descent parser and x86 ELF emitter — over the fuzz bytes as a C source
+# program. Ported from the old file-input target (old invocation `/cc500/cc500`, reading the
+# program from stdin, target name `cc500`): the raw stdin binary was uninstrumented and single-shot, so
+# it was converted to an in-process libFuzzer harness over the SAME code path (parity = the
+# compiler's code path survives), giving instrumented edges and ASan+UBSan coverage of the
+# compiler itself. cc500 has no NUL-termination / bounds checks, so a correct harness finds
+# genuine memory-safety defects (kept as productive findings, not masked).
+cmds:
+  - cmd: /mayhem/cc500
+    libfuzzer: true
+    dictionary: /mayhem/mayhem/cc500/cc500.dict
+testsuite:
+  - https://$MAYHEM_DOMAIN/$MAYHEM_PROJECT/$MAYHEM_TARGET/testsuite.tar
+  - file://mayhem/cc500/testsuite
